@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Trading Reel 1</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b2326'/%3E%3Cpath d='M7 22l6-7 4 3 8-10' stroke='%232ebd85' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css?v=20261127c">
+</head>
+<body>
+  <div class="viewport" id="viewport">
+    <div class="stage" id="stage" aria-label="Vertical trading replay canvas">
+      <div class="stage-side left"></div>
+      <div class="stage-side right"></div>
+      <div class="notch" id="notch" title="Double-tap to open the Studio"></div>
+
+      <div class="app" id="app">
+        <!-- ================= HEADER ================= -->
+        <header class="symbol-header">
+          <div class="symbol-main">
+            <div class="symbol-row">
+              <h1 id="symbolName" data-i18n-skip>BTCUSDT</h1>
+              <span class="perp-pill">Perp</span>
+              <svg class="chevron" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+              <span class="sim-text" id="simPill" data-i18n-skip>SIM</span>
+            </div>
+            <div class="price-change" id="priceChange">+0,00%</div>
+          </div>
+          <div class="header-actions">
+            <button class="icon-btn" id="supportBtn" aria-label="Support">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2.6" y="7.1" width="7.1" height="9.6" rx="1" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                <path d="M6.15 3v4.1M6.15 16.7v4.1" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                <rect x="14.3" y="5" width="7.1" height="14" rx="1" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                <path d="M17.85 1.3v3.7M17.85 19v3.7" fill="none" stroke="currentColor" stroke-width="2.2"/>
+              </svg>
+            </button>
+            <button class="icon-btn" id="moreBtn" aria-label="More">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>
+              <i class="notif-dot"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- ================= ORDER PANEL ================= -->
+        <section class="order-panel">
+          <div class="order-left">
+            <div class="cost-row">
+              <span class="underlined">Cost</span>
+              <span id="costValue">0 USDT</span>
+            </div>
+            <button class="side-btn short" id="orderSideBtn">Sell/Short</button>
+          </div>
+          <div class="order-right">
+            <div class="book-row">
+              <span class="book-price green" id="bidPrice">--</span>
+              <span class="book-size" id="bidSize">--</span>
+            </div>
+            <div class="book-row soft">
+              <span class="book-price green" id="askPrice">--</span>
+              <span class="book-size" id="askSize">--</span>
+            </div>
+            <div class="ratio-row">
+              <span class="ratio-text green" id="ratioBuy">--</span>
+              <div class="ratio-bar">
+                <span id="ratioGreen"></span>
+                <span id="ratioRed"></span>
+              </div>
+              <span class="ratio-text red" id="ratioSell">--</span>
+            </div>
+            <div class="qty-row">
+              <button class="qty-box" id="orderSizeBtn">
+                <span id="orderSizeLabel">0.01</span>
+                <svg class="chevron" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+              </button>
+              <button class="depth-toggle" id="depthToggle" aria-label="Switch order side">
+                <span class="depth-lines"><i></i><i></i><i></i></span>
+                <span class="depth-squares"><i class="red" id="sideRed"></i><i class="green" id="sideGreen"></i></span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- ================= TABS ================= -->
+        <nav class="tabs">
+          <button class="tab active" data-tab="positions">Positions <span id="posCount">(1)</span></button>
+          <button class="tab" data-tab="orders">Open Orders (0)</button>
+          <button class="tab" data-tab="bots">Bots</button>
+          <button class="icon-btn copy-btn" id="copyBtn" aria-label="Copy position">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="14" height="16" rx="2"/><circle cx="16" cy="16" r="4"/><path d="M16 14v2l1 1"/></svg>
+          </button>
+        </nav>
+
+        <div class="filter-row">
+          <label class="check">
+            <input type="checkbox" id="hideOthers">
+            <span>Hide Other Symbols</span>
+          </label>
+          <div class="filter-actions">
+            <button class="small-btn" id="closeAllBtn">Close All</button>
+            <button class="icon-btn sort-btn" id="sortBtn" aria-label="Sort positions">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v16M5 7l3-3 3 3M16 20V4M13 17l3 3 3-3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= POSITIONS SCREEN ================= -->
+        <main class="screen" id="positionsScreen">
+          <section class="position-card" id="positionCard">
+            <div class="pos-title">
+              <span class="asset-badge" id="assetBadge">B</span>
+              <span class="pos-symbol" id="cardSymbol" data-i18n-skip>BTCUSDT</span>
+              <span class="pos-meta pill" id="perpTag">Perp</span>
+              <span class="pos-meta pill" id="crossLeverage">Cross 20X</span>
+              <span class="leverage-bars"><i></i><i></i><i></i><i></i></span>
+              <span class="closed-tag hidden" id="closedTag">CLOSED</span>
+            </div>
+
+            <div class="pnl-row">
+              <div class="pnl-left">
+                <div class="field-label">
+                  PNL (USDT)
+                  <button class="info-btn" id="pnlInfo" aria-label="About PNL">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6"/></svg>
+                  </button>
+                </div>
+                <div class="pnl-value positive" id="pnlValue">0,00</div>
+              </div>
+              <div class="roi-right">
+                <div class="field-label right">ROI</div>
+                <div class="roi-value positive" id="roiValue">0,00%</div>
+              </div>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat">
+                <div class="stat-label">Size (<span id="sizeAsset" data-i18n-skip>BTC</span>) <span class="swap-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h13M14 5l3 3-3 3"/><path d="M20 16H7M10 13l-3 3 3 3"/></svg></span></div>
+                <div class="stat-value" id="sizeValue">--</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Margin (USDT)</div>
+                <div class="stat-value" id="marginValue">--</div>
+              </div>
+              <div class="stat align-right">
+                <div class="stat-label">Margin Ratio</div>
+                <div class="stat-value green" id="marginRatio">--</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Entry Price (USDT)</div>
+                <div class="stat-value" id="entryValue">--</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Mark Price (USDT)</div>
+                <div class="stat-value" id="markValue">--</div>
+              </div>
+              <div class="stat align-right">
+                <div class="stat-label">Liq.Price (USDT)</div>
+                <div class="stat-value" id="liqValue">--</div>
+              </div>
+            </div>
+
+            <button class="realized-row" id="realizedBtn">
+              <span>Realized PNL (USDT)</span>
+              <span class="realized-value negative" id="realizedValue">--</span>
+              <svg class="chevron right-chev" viewBox="0 0 6 10" aria-hidden="true"><path d="M1 1l4 4-4 4"/></svg>
+            </button>
+
+            <div class="action-row">
+              <button id="leverageBtn">Leverage</button>
+              <button id="tpslBtn">TP/SL</button>
+              <button id="closeBtn">Close</button>
+            </div>
+          </section>
+
+          <section class="chart-section" id="chartSection">
+            <div class="chart-toolbar" id="chartToolbar">
+              <button class="tf time-label" data-tf="time">Time</button>
+              <button class="tf" data-tf="1s" disabled title="15m only">1s</button>
+              <button class="tf" data-tf="1m" disabled title="15m only">1m</button>
+              <button class="tf" data-tf="3m" disabled title="15m only">3m</button>
+              <button class="tf" data-tf="5m" disabled title="15m only">5m</button>
+              <button class="tf active" data-tf="15m">15m</button>
+              <button class="tf" data-tf="1h" disabled title="15m only">1h</button>
+              <button class="icon-btn" id="chartFullBtn" aria-label="Fullscreen chart">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="4" y="3" width="12.5" height="15" rx="2.4" fill="none"/>
+                  <path d="M8 7l4.2 4.2M9 11.2h3.2V8" fill="none"/>
+                  <rect x="14" y="13" width="7" height="7.4" rx="1.6" fill="#1f252b"/>
+                </svg>
+              </button>
+              <button class="icon-btn" id="chartMenuBtn" aria-label="Chart menu">
+                <svg class="chevron down" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+              </button>
+            </div>
+            <div class="chart-wrap" id="chartWrap">
+              <canvas id="chartCanvas"></canvas>
+              <div class="chart-message hidden" id="chartMessage"></div>
+            </div>
+            <div class="chart-footer">
+              <span id="chartDate">--</span>
+            </div>
+            <div class="chart-menu hidden" id="chartMenu">
+              <button id="menuResetChart">Reset replay</button>
+              <button id="menuToggleGrid">Toggle grid</button>
+              <button id="menuFitChart">Fit chart to candles</button>
+            </div>
+          </section>
+        </main>
+
+        <!-- ================= ALT SCREENS ================= -->
+        <div class="alt-screen hidden" id="altScreen">
+          <div class="alt-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="16" r="4"/></svg>
+          </div>
+          <h2 id="altTitle">Futures only</h2>
+          <p id="altCopy">This replay studio focuses on the Futures position screen. Use the Futures tab to go back.</p>
+        </div>
+
+        <!-- ================= BOTTOM NAV ================= -->
+        <nav class="bottom-nav" id="bottomNav">
+          <button class="nav-item" data-nav="home">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2.5 22.2V10.4L12 2.4l9.5 8v11.8z"/>
+              <path d="M8.7 22.2v-6.7h6.6v6.7"/>
+            </svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-item" data-nav="markets">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2.2 21H21.8"/>
+              <path d="M2.2 16.3l6.2-5.9 5.2 4.7 6.8-8"/>
+              <path d="M15.9 6.7H21v5.1"/>
+            </svg>
+            <span>Markets</span>
+          </button>
+          <button class="nav-item" data-nav="trade">
+            <span class="nav-icon-mask nav-trade-mask" aria-hidden="true"></span>
+            <span>Trade</span>
+          </button>
+          <button class="nav-item active" data-nav="futures">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 22V5.35c0-1.3 1.1-2.4 2.4-2.4h12.4c1.3 0 2.4 1.1 2.4 2.4v3.75"/>
+              <path d="M4 22h6.5"/>
+              <rect class="futures-line" x="8.5" y="7" width="9.9" height="1.8" rx=".9"/>
+              <rect class="futures-line" x="8.5" y="11.4" width="6.4" height="1.8" rx=".9"/>
+              <path class="futures-gem" d="M18.2 12.8c.2-.2.5-.2.7 0l4.8 4.8c.2.2.2.5 0 .7l-4.8 4.8c-.2.2-.5.2-.7 0l-4.8-4.8c-.2-.2-.2-.5 0-.7z"/>
+            </svg>
+            <span>Futures</span>
+          </button>
+          <button class="nav-item" data-nav="assets">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="2.8" y="6.5" width="18.4" height="14.7" rx="1.6"/>
+              <path d="M8.8 6.5V4.6a1.7 1.7 0 011.7-1.7h3a1.7 1.7 0 011.7 1.7v1.9"/>
+              <circle cx="16.6" cy="13.7" r="1.7"/>
+            </svg>
+            <span>Assets</span>
+          </button>
+        </nav>
+
+        <!-- ================= BOTTOM SHEET / MODALS ================= -->
+        <div class="sheet-backdrop hidden" id="sheetBackdrop"></div>
+        <div class="sheet hidden" id="sheet">
+          <div class="sheet-grab"></div>
+          <div class="sheet-head">
+            <h3 id="sheetTitle">Leverage</h3>
+            <button class="icon-btn" id="sheetClose" aria-label="Close">✕</button>
+          </div>
+          <div class="sheet-body" id="sheetBody"></div>
+          <div class="sheet-actions" id="sheetActions"></div>
+        </div>
+
+        <div class="countdown hidden" id="countdown" aria-live="polite">
+          <div class="countdown-num" id="countdownNum">3</div>
+          <div class="countdown-label">REC</div>
+        </div>
+        <div class="toast hidden" id="toast"></div>
+        <div class="replay-hint hidden" id="replayHint">Double-tap chart to replay</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= STUDIO (outside the recording canvas) ================= -->
+  <button class="studio-fab" id="studioFab" aria-label="Open Studio">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06a2 2 0 11-2.83 2.83l-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 1.55V21a2 2 0 11-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.88.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.55-1H3a2 2 0 110-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.88l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-1.55V3a2 2 0 114 0v.09A1.7 1.7 0 0015 4.6a1.7 1.7 0 001.88-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 001.55 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.51 1z"/></svg>
+  </button>
+
+  <aside class="studio hidden" id="studio" aria-label="Reel Studio">
+    <div class="studio-head">
+      <div>
+        <span class="studio-kicker">TRADING REEL 1</span>
+        <h2>Reel Studio</h2>
+      </div>
+      <button class="studio-close" id="studioClose" aria-label="Close Studio">✕</button>
+    </div>
+
+    <div class="studio-steps">
+      <span class="active">1 · SETUP</span>
+      <span>2 · PREVIEW</span>
+      <span>3 · RECORD</span>
+    </div>
+
+    <div class="studio-tabs" id="studioAccountTabs" data-i18n-skip></div>
+
+    <div class="studio-scroll">
+      <div class="studio-note">
+        This is the pre-record setup. Historical candle OHLC is fetched from
+        Binance/API; the entry, final PNL, adverse drawdown, turn and take length
+        are manual inputs, and the replay path is simulated from them under the
+        SIM badge. Every ticker is locked to its completed 48-hour 15m series
+        (192 candles). That full pool seeds the chart so its visible history is
+        filled from the left edge; the actual candle shapes and direction
+        sequence drive the record chart. Take length accepts 10 to 600 seconds
+        and determines how many of those candles play back and how fast; the
+        chart fills the selected take and keeps the live candle at the 45%
+        reference boundary.
+      </div>
+
+      <section class="studio-card">
+        <h4>Account</h4>
+        <div class="field">
+          <label for="fHandle">Handle / label</label>
+          <input id="fHandle" type="text" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="fWatermark">Chart watermark text</label>
+          <input id="fWatermark" type="text" autocomplete="off" placeholder="TRADING REEL">
+        </div>
+        <div class="field">
+          <label for="fLogoUrl">Watermark logo image (optional)</label>
+          <input id="fLogoUrl" type="text" autocomplete="off" placeholder="assets/logo.png">
+          <div class="hint">Path to your logo image. It is drawn immediately left of the editable wordmark. Replace the asset in assets/logo.png to change the mark.</div>
+        </div>
+        <div class="field">
+          <label for="fSimLabel">SIM label (after the down arrow)</label>
+          <input id="fSimLabel" type="text" autocomplete="off" maxlength="18" placeholder="SIM">
+        </div>
+        <div class="field">
+          <label for="fPositionCount">Positions tab count</label>
+          <input id="fPositionCount" type="number" min="0" max="99" step="1">
+        </div>
+        <div class="field">
+          <label for="fLanguage">Language</label>
+          <select id="fLanguage" data-i18n-skip>
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="th">ไทย</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="fr">Français</option>
+            <option value="it">Italiano</option>
+            <option value="ru">Русский</option>
+            <option value="pt">Português</option>
+            <option value="es">Español</option>
+            <option value="de">Deutsch</option>
+            <option value="ms">Bahasa Melayu</option>
+            <option value="id">Bahasa Indonesia</option>
+          </select>
+          <div class="hint">Translates the recording UI and Studio controls. This selector exists only in the pre-record Studio; it is not present while recording.</div>
+        </div>
+      </section>
+
+      <section class="studio-card">
+        <h4>Market</h4>
+        <div class="field-row">
+          <div class="field">
+            <label for="fSymbol">Ticker</label>
+            <input id="fSymbol" type="text" placeholder="BTCUSDT" autocapitalize="characters" autocomplete="off" list="coinList">
+            <datalist id="coinList" data-i18n-skip></datalist>
+          </div>
+          <div class="field">
+            <label for="fInterval">Candle interval</label>
+            <select id="fInterval" disabled title="Locked to 15m by the 48-hour chart requirement">
+              <option value="15m">15m · locked</option>
+            </select>
+            <div class="hint">Locked to 15m. Every ticker loads exactly its past 48 hours of 15m candles (192 completed candles). The full pool seeds the record chart and keeps its visible home area filled.</div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fChange24h">24h change magnitude (%)</label>
+            <input id="fChange24h" type="number" step="0.01" placeholder="manual % — blank shows --">
+            <div class="hint">Manual magnitude. Long always displays positive; short always displays negative, even if no sign is entered.</div>
+          </div>
+          <div class="field">
+            <label for="fVaryPattern">Chart variety</label>
+            <select id="fVaryPattern">
+              <option value="1">New pattern each page load</option>
+              <option value="0">Keep this pattern</option>
+            </select>
+          </div>
+        </div>
+        <div class="hint" id="patternHint">Pattern 0 / 100</div>
+        <button class="studio-btn subtle" id="newPatternBtn">New pattern now</button>
+        <button class="studio-btn subtle" id="refreshDataBtn">Fetch fresh candles</button>
+        <div class="mover-panel">
+          <div class="mover-title-row">
+            <strong>Top 24h movers</strong>
+            <span id="moverUpdated">Loading…</span>
+          </div>
+          <div class="mover-columns">
+            <div>
+              <div class="mover-label">Top gainers</div>
+              <div class="mover-list" id="moverGainers"></div>
+            </div>
+            <div>
+              <div class="mover-label">Top losers</div>
+              <div class="mover-list" id="moverLosers"></div>
+            </div>
+          </div>
+          <div class="hint" id="moverHint">Verified active Binance USDT spot pairs, refreshed hourly. Selecting one loads its latest available candle history.</div>
+        </div>
+      </section>
+
+      <section class="studio-card">
+        <h4>Position</h4>
+        <div class="field-row">
+          <div class="field">
+            <label for="fDirection">Direction</label>
+            <select id="fDirection">
+              <option value="long">Long</option>
+              <option value="short">Short</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fMarginMode">Margin mode</label>
+            <select id="fMarginMode">
+              <option value="cross">Cross</option>
+              <option value="isolated">Isolated</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fLeverage">Leverage</label>
+            <input id="fLeverage" type="number" min="1" max="125" step="1">
+          </div>
+          <div class="field">
+            <label for="fMargin">Margin (USDT)</label>
+            <input id="fMargin" type="number" min="1" step="100">
+          </div>
+        </div>
+        <div class="hint" id="marginModeHint">The margin is used exactly as entered. Margin mode affects the position label and liquidation calculation.</div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fSizeDisplay">Calculated size</label>
+            <input id="fSizeDisplay" type="text" placeholder="Enter entry price" title="Editable size. Changing it recalculates the margin from size × entry ÷ leverage.">
+          </div>
+          <div class="field">
+            <label for="fTakeSeconds">Take length (seconds)</label>
+            <input id="fTakeSeconds" type="number" min="10" max="600" step="1">
+          </div>
+        </div>
+        <div class="hint">Size and margin are two-way synchronized through margin × leverage ÷ entry. Take length accepts 10–600 seconds. The chart is locked to the past 48 hours of 15m candles; the source count stays 192, the deep seed fills the chart home area, and the playback count is derived from the real pattern and requested turn.</div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fEntryBack">48h source candles (fixed)</label>
+            <input id="fEntryBack" type="number" readonly value="192" title="Past 48 hours of 15m candles. Locked at 192 completed candles; each record chooses a real 24h chart window from this pool.">
+          </div>
+          <div class="field">
+            <label for="fStartBack">Playback candles (auto)</label>
+            <input id="fStartBack" type="text" readonly value="—" title="Number of 15m candles revealed during the selected take. Derived from the real pattern and turn.">
+          </div>
+        </div>
+        <div class="hint" id="rhythmHint">48h / 15m source locked. All 192 completed 15m candles form the chart pool; the deep seed fills the home area and playback candles/cadence are derived from the real pattern and selected take length.</div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fEntryPrice" id="entryPriceLabel">Entry price (USDT)</label>
+            <input id="fEntryPrice" type="number" min="0" step="any" placeholder="required manual entry" required>
+            <div class="hint" id="entryPriceHint">Required for every ticker. This is your manual fill and is never read from the API. It must fall inside the loaded candle high/low range shown in the summary. Size = margin × leverage ÷ entry.</div>
+          </div>
+          <div class="field">
+            <label for="fCountdown">Countdown (seconds)</label>
+            <input id="fCountdown" type="number" min="0" max="10" step="1">
+          </div>
+        </div>
+        <div class="field">
+          <label for="fTargetPnl">Final PNL at replay end (USDT)</label>
+          <input id="fTargetPnl" type="number" min="0.01" step="0.01" placeholder="e.g. 24000 — required manual target" required>
+          <div class="hint">Required positive target. The real exit mark is solved from this manually entered PNL and the calculated size; entry and size stay fixed. There is no automatic real-close fallback.</div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fDrawdownPct">Adverse drawdown (% of margin)</label>
+            <input id="fDrawdownPct" type="number" min="0" max="100" step="0.1" placeholder="blank = no drawdown">
+          </div>
+          <div class="field">
+            <label for="fTurnSeconds">Requested turn (seconds)</label>
+            <input id="fTurnSeconds" type="number" min="1" max="600" step="1">
+          </div>
+        </div>
+        <div class="hint" id="drawdownHint">The adverse drawdown is the exact maximum loss allowed in the take. Playback starts at the manual entry (PNL 0); when a value is set, it moves into this floor once and never goes below it. The first profitable turn happens exactly at the requested second after the countdown hold, starting from the manual entry. Leave the field blank for no configured max drawdown.</div>
+        <div class="pnl-preview" id="pnlPreview">
+          <div>
+            <span>Preview PNL at replay start</span>
+            <strong id="previewStartPnl">--</strong>
+          </div>
+          <div>
+            <span>Final PNL</span>
+            <strong id="previewEndPnl">--</strong>
+          </div>
+        </div>
+        <div class="setup-summary" id="setupSummary">
+          <div><span>Entry notional</span><strong id="pvNotional">--</strong></div>
+          <div><span>Quantity</span><strong id="pvQty">--</strong></div>
+          <div><span>Entry price</span><strong id="pvEntry">--</strong></div>
+          <div><span>Margin</span><strong id="pvMargin">--</strong></div>
+          <div><span>ROI at end</span><strong id="pvRoi">--</strong></div>
+          <div><span>Max drawdown</span><strong id="pvDrawdown">--</strong></div>
+          <div><span>Turn (seconds)</span><strong id="pvTurn">--</strong></div>
+          <div><span>Final mark</span><strong id="pvFinalMark">--</strong></div>
+          <div><span>Loaded candle range</span><strong id="pvRange">--</strong></div>
+          <div><span>Chart pattern</span><strong id="pvPattern">--</strong></div>
+          <div><span>Replay window</span><strong id="pvWindow">--</strong></div>
+        </div>
+        <div class="hint" id="positionHint">
+          Size is derived from margin × leverage ÷ entry price. Change entry
+          timing to show a different slice of real price action.
+        </div>
+      </section>
+
+      <section class="studio-card">
+        <h4>Reel settings</h4>
+        <div class="field-row">
+          <div class="field">
+            <label for="fRealized">Realized PNL (USDT)</label>
+            <input id="fRealized" type="number" step="0.01">
+          </div>
+          <div class="field">
+            <label for="fPriceDecimals">Price decimals</label>
+            <input id="fPriceDecimals" type="number" min="0" max="8" step="1">
+          </div>
+        </div>
+        <div class="check-row">
+          <label><input type="checkbox" id="fLoop"> Loop replay</label>
+          <label><input type="checkbox" id="fAutoPlay"> Auto-play on load</label>
+        </div>
+      </section>
+
+      <section class="studio-card">
+        <h4>Daily workflow</h4>
+        <ol class="workflow">
+          <li>Pick a profile with <code>?account=1–5</code>, or keep the saved one.</li>
+          <li>Set ticker, direction, entry, final PNL, drawdown and turn seconds.</li>
+          <li>Check the preview summary, then press Start recording.</li>
+          <li>Start Android's screen recorder before pressing Start. The countdown holds the entry frame, then playback runs the full loss-to-target path.</li>
+          <li>Record one take, reload, and repeat with a new real window.</li>
+        </ol>
+        <div class="workflow-warning">
+          The SIM badge stays on screen as the simulation marker. Presenting this
+          replay as real account performance is misleading and may violate
+          platform and financial-promotion rules.
+        </div>
+      </section>
+
+      <section class="studio-card">
+        <h4>Project</h4>
+        <div class="button-grid">
+          <button class="studio-btn" id="resetDefaultsBtn">Reset to config.js</button>
+          <button class="studio-btn" id="exportBtn">Export JSON</button>
+          <button class="studio-btn" id="importBtn">Import JSON</button>
+          <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+        </div>
+      </section>
+    </div>
+
+    <div class="studio-toast hidden" id="studioToast"></div>
+
+    <div class="studio-footer">
+      <button class="studio-btn ghost" id="replayBtn">Replay</button>
+      <button class="studio-btn primary" id="applyBtn">Apply &amp; replay</button>
+      <button class="studio-btn record" id="recordBtn">Start recording</button>
+    </div>
+  </aside>
+
+  <script src="js/config.js?v=20261127c"></script>
+  <script src="js/data.js?v=20261127c"></script>
+  <script src="js/i18n.js?v=20261127c"></script>
+  <script src="js/candle-engine.js?v=20261127c"></script>
+  <script src="js/chart.js?v=20261127c"></script>
+  <script src="js/app.js?v=20261127c"></script>
+</body>
+</html>
